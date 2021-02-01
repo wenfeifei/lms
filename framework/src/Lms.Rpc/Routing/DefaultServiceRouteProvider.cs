@@ -1,5 +1,11 @@
+using System.Collections.Immutable;
+using System.Linq;
 using System.Threading.Tasks;
+using Lms.Rpc.Address;
+using Lms.Rpc.Address.Descriptor;
+using Lms.Rpc.Routing.Descriptor;
 using Lms.Rpc.Runtime.Server.ServiceEntry;
+using Lms.Rpc.Utils;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -11,7 +17,7 @@ namespace Lms.Rpc.Routing
         private readonly IServiceRouteManager _serviceRouteManager;
         private readonly ILogger<DefaultServiceRouteProvider> _logger;
 
-        public DefaultServiceRouteProvider(IServiceEntryManager serviceEntryManager, 
+        public DefaultServiceRouteProvider(IServiceEntryManager serviceEntryManager,
             IServiceRouteManager serviceRouteManager)
         {
             _serviceEntryManager = serviceEntryManager;
@@ -19,9 +25,11 @@ namespace Lms.Rpc.Routing
             _logger = NullLogger<DefaultServiceRouteProvider>.Instance;
         }
 
-        public Task RegisterRoutes(double processorTime)
+        public async Task RegisterRoutes(double processorTime)
         {
-            throw new System.NotImplementedException();
+            var localServiceEntries = _serviceEntryManager.GetLocalEntries();
+            var serviceRouteDescriptors = localServiceEntries.Select(e => e.CreateLocalRouteDescriptor(AddressType.Rpc)).ToImmutableList();
+            await _serviceRouteManager.SetRoutesAsync(serviceRouteDescriptors);
         }
     }
 }
